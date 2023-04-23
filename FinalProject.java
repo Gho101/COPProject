@@ -529,7 +529,6 @@ class UserList{
         list[spot] = new Faculty(id, name, rank, office, lec, numLec);
         list[spot].insertCRN(parts);
         list[spot].printCRN();
-        
         spot++;
     }
 
@@ -545,18 +544,22 @@ class UserList{
 
         System.out.printf("Which lecture to enroll [%s] in?", name);
         Lecture[] parts = lec.classLookUp(myScan.nextLine(), 1);
-        for(int i = 0; i < parts.length; i++){
-            if(parts[i] instanceof LectureLabsNoLabs){
-                LabClass[] labs = lec.getLab(parts[i].getCRN());
+        
+        list[spot] = new Student(id, name, 1);
+
+        if(parts[0] instanceof LectureLabsNoLabs){
+            if(parts[0].getLabs().compareTo("yes") == 0){
+                LabClass[] labs = lec.getLab(parts[0].getCRN());
                 LabClass randLab = labs[randomNum()]; 
                 System.out.printf("[%s]is added to lab: %s", name, randLab.getCRN());
             }
-        }
-       
+        } 
         
 
-        
+    }
 
+    public void addLeclist(){
+        
     }
 
     
