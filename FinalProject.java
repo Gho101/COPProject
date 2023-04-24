@@ -204,33 +204,27 @@ class LectureList{
     //look up class by CRN
     public Lecture[] classLookUp(String CRN, int numLec){
         String [] parts = CRN.split(" ");
-        Lecture[] lec;
-        int inputs = parts.length;
-        while(numLec != inputs){
-            System.out.print("Number of crn entered is incorrect.\n Enter the crns of the lectures: ");
-            CRN = myScan.nextLine();
-            parts = CRN.split(" ");
-            inputs = parts.length;
+        
+        Lecture[] lec = new Lecture[numLec];
+        for(int i = 0; i < numLec; i++){
+            lec[i] = null;
         }
-        lec = new Lecture[size];
 
-        for(int j = 0; j < inputs; j++){
-            for(int i = 0; i < size; i ++){
-                if(list[i].getCRN() != null){
-                    if(list[i].getCRN().compareTo(parts[j]) == 0){
-                        if(list[i] instanceof LectureLabsNoLabs){
-                            if(list[i].getLabs().compareTo("No") == 0){
-                                System.out.print("\t ["+list[i].getCRN()+ "/" + list[i].getPrefix()+"/"+ list[i].getTitl()+"] Added!\n");
-                                lec[i] = list[i];
-                            }else{
-                                System.out.print("\t ["+ list[i].getPrefix()+"/"+ list[i].getTitl()+"] has these labs:\n");
-                                lec[i] = list[i];
-                                printLab(i);
-                            }
+        for(int j = 0; j < numLec; j++){
+            for(int i = 0; i < size; i ++){            
+                if(list[i].getCRN().compareTo(parts[j]) == 0){
+                    if(list[i] instanceof LectureLabsNoLabs){
+                        if(list[i].getLabs().compareTo("No") == 0){
+                            System.out.print("\t ["+list[i].getCRN()+ "/" + list[i].getPrefix()+"/"+ list[i].getTitl()+"] Added!\n");
+                            lec[j] = new LectureLabsNoLabs(list[i].getCRN(),  list[i].getPrefix(), list[i].getTitl(), list[i].getGrad(), list[i].getModality(), list[i].getBuilding(), list[i].getLabs());
                         }else{
-                            System.out.print("\t ["+list[i].getCRN()+ "/" + list[i].getPrefix()+"/"+ list[i].getTitl() +"] Added!\n"); 
-                            lec[i] = list[i];
+                            System.out.print("\t ["+ list[i].getPrefix()+"/"+ list[i].getTitl()+"] has these labs:\n");
+                            lec[j] = new LectureLabsNoLabs(list[i].getCRN(),  list[i].getPrefix(), list[i].getTitl(), list[i].getGrad(), list[i].getModality(), list[i].getBuilding(), list[i].getLabs());
+                            printLab(i);
                         }
+                    }else{
+                        System.out.print("\t ["+list[i].getCRN()+ "/" + list[i].getPrefix()+"/"+ list[i].getTitl() +"] Added!\n"); 
+                        lec[j] = new Online(list[i].getCRN(), list[i].getPrefix(), list[i].getTitl(), list[i].getGrad(), list[i].getModality());
                     }
                 }
             }
@@ -253,7 +247,7 @@ class LectureList{
         int index = 0;
         for(int i = 0; i < size; i++){
             if(list[i].getCRN().compareTo(CRN) == 0){
-                for(int j =(i+1); j < (i + 3); j++){
+                for(int j =(i+1); j < (i + 4); j++){
                     if(list[j] instanceof LabClass){
                         parts[index] = (LabClass)list[j];
                     }
@@ -341,11 +335,12 @@ abstract class User{
     private int numLec;
     private Lecture[] lec;
 
-    public User(int id, String name, int numLec){
+    public User(int id, String name, int numLec, Lecture[] parts){
         setId(id);
         setName(name);
         setNumLec(numLec);
         setLecList();
+        insertLec(parts);
         
     }
      
@@ -397,8 +392,8 @@ abstract class User{
 }
 
 class Student extends User{
-    public Student(int id, String name, int numLec){
-        super(id, name, numLec);
+    public Student(int id, String name, int numLec, Lecture[] parts){
+        super(id, name, numLec, parts);
     }
 }
 
@@ -406,8 +401,8 @@ class TA extends User{
     private String supervisor;
     private String degree;
 
-    public TA(int id, String name, String supervisor, String degree , int numLec){
-        super(id, name, numLec);
+    public TA(int id, String name, String supervisor, String degree , int numLec, Lecture[] parts){
+        super(id, name, numLec, parts);
         setSupervisor(supervisor);
         setDegree(degree);
     }
@@ -433,8 +428,8 @@ class Faculty extends User{
     private String rank;
     private String office;
     
-    public Faculty(int id, String name, String rank, String office, LectureList list, int numLec) {
-        super(id, name, numLec);
+    public Faculty(int id, String name, String rank, String office, int numLec, Lecture[] parts) {
+        super(id, name, numLec,parts);
         setRank(rank);
         setOffice(office);
 
@@ -510,23 +505,23 @@ class UserList{
         myScan.nextLine();
 
         System.out.print("Enter the crns of the lectures:");
-        Lecture[] parts = lec.classLookUp(myScan.nextLine(), numLec);
+        
+        Lecture[] lectures = new Lecture[numLec];
+        lectures = lec.classLookUp(myScan.nextLine(), numLec);
+    
 
-        list[spot] = new Faculty(id, name, rank, office, lec, numLec);
-        list[spot].insertLec(parts);
-        //list[spot].printCRN();
+        list[spot] = new Faculty(id, name, rank, office, numLec, lectures);
         spot++;
 
-        //System.out.println(numLec);
         //Gonna fix this by checking lecture list with the user lecture list and grab lecture list items to check the instanceof
         for(int i=0;i< numLec;i++){
-        	if(parts[i].getLabs().compareTo("Yes")== 0) {
-	        	if(parts[i].getLabs().compareTo("yes")==0)
-	        	{
-	        		taEntry(lec, parts[i].getCRN(), list[i].getNumLec());
-	        	}
+            if(lectures[i] instanceof LectureLabsNoLabs){
+        	    if(lectures[i].getLabs().compareTo("Yes")== 0) {
 	        	
-	        }
+                    taEntry(lec, lectures[i].getCRN(), list[i].getNumLec());
+	        	
+	            }
+            }
         }
         System.out.println("Enter the TA's ID for ");
     }
@@ -553,7 +548,7 @@ class UserList{
     			String taSupe=myScan.nextLine();
     			System.out.println("Degree seeking: ");
     			String taDegree=myScan.nextLine();
-    			list[spot]=new TA(id, taName, taSupe, taDegree, taLecs++);
+    			//list[spot]=new TA(id, taName, taSupe, taDegree, taLecs++);
     			spot++;
     		}
     		
@@ -597,48 +592,36 @@ class UserList{
 
     public void studentEntry(LectureList lec){
 
-
+        boolean exsist = false;
         System.out.print("Enter UCF id:");
         int id = myScan.nextInt();
         myScan.nextLine();
 
         for(int i = 0; i < list.length; i++){
-            if(list[i].getId() != id){
-               //id Should be added Here
-                System.out.print("Enter name: ");
-                String name = myScan.nextLine();
+           try{
+                if(list[i].getId() == id){
+                    exsist = true;
+                }
+            }catch(Exception e){
 
-                System.out.printf("Which lecture to enroll [%s] in?", name);
-                Lecture[] parts = lec.classLookUp(myScan.nextLine(), 1);
+            }
+        }
+        if(!exsist){
+            System.out.print("Enter name: ");
+            String name = myScan.nextLine();
+            System.out.printf("Which lecture to enroll [%s] in?", name);
+            String CRN = myScan.nextLine();
+            Lecture [] lecture = lec.classLookUp(CRN, 1);
+            if( lecture[0] instanceof LectureLabsNoLabs){
                 
-                list[spot] = new Student(id, name, 1);
-
-                if(parts[0] instanceof LectureLabsNoLabs){
-                    if(parts[0].getLabs().compareTo("yes") == 0){
-                        LabClass[] labs = lec.getLab(parts[0].getCRN());
-                        LabClass randLab = labs[randomNum()]; 
-                        System.out.printf("[%s]is added to lab: %s", name, randLab.getCRN());
-                    }
+                if(lecture[0].getLabs().compareTo("YES") == 0){
+                    LabClass[] labs = lec.getLab(lecture[0].getCRN());
+                    LabClass randLab = labs[randomNum()]; 
+                    System.out.printf("[%s]is added to lab: %s", name, randLab.getCRN());
+                    list[spot]= new Student(id, name, 1, lecture);
                 } 
             }
         }
-
-        //id Should be added Here
-        System.out.print("Enter name: ");
-        String name = myScan.nextLine();
-
-        System.out.printf("Which lecture to enroll [%s] in?", name);
-        Lecture[] parts = lec.classLookUp(myScan.nextLine(), 1);
-        
-        list[spot] = new Student(id, name, 1);
-
-        if(parts[0] instanceof LectureLabsNoLabs){
-            if(parts[0].getLabs().compareTo("yes") == 0){
-                LabClass[] labs = lec.getLab(parts[0].getCRN());
-                LabClass randLab = labs[randomNum()]; 
-                System.out.printf("[%s]is added to lab: %s", name, randLab.getCRN());
-            }
-        } 
         
     }
 
