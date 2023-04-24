@@ -19,16 +19,6 @@ abstract class Lecture{
     private String building;
     private String labs;
     private String modality;
-    private int idNum;
-
-    
-
-    public int getIdNum() {
-        return idNum;
-    }
-    public void setIdNum(int idNum) {
-        this.idNum = idNum;
-    }
 
     public String getModality() {
         return modality;
@@ -78,6 +68,7 @@ abstract class Lecture{
     public void setLabs(String labs) {
         this.labs = labs;
     }
+    
 } 
 
 class LectureLabsNoLabs extends Lecture{
@@ -182,7 +173,7 @@ class LectureList{
         for(int i = 0; i < size; i++) list[i]= null;
 
         FillList(FILE);
-        CleanFile(FILE);
+        //CleanFile(FILE);
     }
 
     //take the contents of the file and then place it in an array
@@ -342,17 +333,6 @@ class LectureList{
         }
         myScan.close();
     }
-
-    
-    
-    //empty the file
-    private void CleanFile(String FILE){
-        try {
-            new FileWriter(FILE, false).close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }
 
 abstract class User{
@@ -365,16 +345,25 @@ abstract class User{
         setId(id);
         setName(name);
         setNumLec(numLec);
-        setCRNList();
+        setLecList();
         
     }
      
 
-    public void setCRNList(){
+    public void setLecList(){
         lec = new Lecture[numLec];
     }
-    public void insertCRN(Lecture[] parts){
+    public void insertLec(Lecture[] parts){
         lec = parts;
+    }
+    
+    public void expandLec(){
+        Lecture[] newList = new Lecture[lec.length + 1];
+    
+        System.arraycopy(lec, 0, newList, 0, lec.length);
+            
+        lec = newList;
+        lec[lec.length] = null;
     }
     
     public int getNumLec() {
@@ -399,11 +388,11 @@ abstract class User{
         return lec;
     }
 
-    public void printCRN(){
-        for(int i = 0; i < lec.length; i++){
-            System.out.print(lec[i]);
-        }
+    public int lecSize(){
+        return lec.length;
     }
+
+    
 
 }
 
@@ -499,10 +488,7 @@ class UserList{
         int num = rand.nextInt(2) + 1;
         return num;
     }
-    
 
-    //Incomplete
-    //           TODO link the classes to falculty
     public void falcultyEntry(LectureList lec){
         
         System.out.print("Enter UCF id:");
@@ -527,10 +513,87 @@ class UserList{
         Lecture[] parts = lec.classLookUp(myScan.nextLine(), numLec);
 
         list[spot] = new Faculty(id, name, rank, office, lec, numLec);
-        list[spot].insertCRN(parts);
-        list[spot].printCRN();
+        list[spot].insertLec(parts);
+        //list[spot].printCRN();
         spot++;
+
+        //System.out.println(numLec);
+        //Gonna fix this by checking lecture list with the user lecture list and grab lecture list items to check the instanceof
+        for(int i=0;i< numLec;i++){
+        	if(parts[i].getLabs().compareTo("Yes")== 0) {
+	        	if(parts[i].getLabs().compareTo("yes")==0)
+	        	{
+	        		taEntry(lec, parts[i].getCRN(), list[i].getNumLec());
+	        	}
+	        	
+	        }
+        }
+        System.out.println("Enter the TA's ID for ");
     }
+
+    public void taEntry(LectureList lec, String crn, int numLec) {
+    	
+    	System.out.println("Enter the TA's ID for "+crn);
+    	int id=myScan.nextInt();
+    	myScan.nextLine();
+    	for(int i=0;i<numLec;i++) {
+    		if((list[i].getId())==id)
+    		{
+    			int taLecs=list[spot].getNumLec();
+    			System.out.println("TA found as Student "+list[i].getName());
+    			list[spot].setNumLec(taLecs++);
+    			
+    		}
+    		else if((list[i].getId())!=id)
+    		{
+    			int taLecs=0;
+    			System.out.println("Name of TA: ");
+    			String taName=myScan.nextLine();
+    			System.out.println("TA's supervisor's name: ");
+    			String taSupe=myScan.nextLine();
+    			System.out.println("Degree seeking: ");
+    			String taDegree=myScan.nextLine();
+    			list[spot]=new TA(id, taName, taSupe, taDegree, taLecs++);
+    			spot++;
+    		}
+    		
+    		
+    	}
+    	
+    	
+    }
+    
+
+
+
+/*
+    public void falcultyEntry(LectureList lec){
+        
+        System.out.print("Enter UCF id:");
+        int id = myScan.nextInt();
+        myScan.nextLine();
+
+        //id Should be added Here
+        System.out.print("Enter name: ");
+        String name = myScan.nextLine();
+
+        System.out.print("Enter rank:");
+        String rank = myScan.nextLine().toLowerCase();
+
+        System.out.print("Enter office location:");
+        String office = myScan.nextLine();
+
+        System.out.print("How many Lectures: ");
+        int numLec = myScan.nextInt();
+        myScan.nextLine();
+
+        System.out.print("Enter the crns of the lectures:");
+        Lecture[] parts = lec.classLookUp(myScan.nextLine(), numLec);
+
+        list[spot] = new Faculty(id, name, rank, office, lec, numLec);
+        list[spot].insertLec(parts);
+        spot++;
+    }*/
 
     public void studentEntry(LectureList lec){
 
@@ -538,6 +601,28 @@ class UserList{
         System.out.print("Enter UCF id:");
         int id = myScan.nextInt();
         myScan.nextLine();
+
+        for(int i = 0; i < list.length; i++){
+            if(list[i].getId() != id){
+               //id Should be added Here
+                System.out.print("Enter name: ");
+                String name = myScan.nextLine();
+
+                System.out.printf("Which lecture to enroll [%s] in?", name);
+                Lecture[] parts = lec.classLookUp(myScan.nextLine(), 1);
+                
+                list[spot] = new Student(id, name, 1);
+
+                if(parts[0] instanceof LectureLabsNoLabs){
+                    if(parts[0].getLabs().compareTo("yes") == 0){
+                        LabClass[] labs = lec.getLab(parts[0].getCRN());
+                        LabClass randLab = labs[randomNum()]; 
+                        System.out.printf("[%s]is added to lab: %s", name, randLab.getCRN());
+                    }
+                } 
+            }
+        }
+
         //id Should be added Here
         System.out.print("Enter name: ");
         String name = myScan.nextLine();
@@ -555,11 +640,14 @@ class UserList{
             }
         } 
         
-
     }
 
-    public void addLeclist(){
-        
+    public void checkLecSize(int id){
+        for(int i = 0; i < list.length; i++){
+            if(list[i].getId() == id){
+                list[i].lecSize();
+            }
+        }
     }
 
     
@@ -639,9 +727,9 @@ class CheckId extends IdException{
     
     boolean tf = false;
 
-    public void idCheck(){
+    public void idCheck( Scanner scan){
         while(tf == false){
-            Scanner myScan = new Scanner(System.in);
+            Scanner myScan = scan;
             String  id = myScan.nextLine();
             try{
                 if(id.length() == 7){
