@@ -352,6 +352,20 @@ abstract class User{
         expandLec();
 
     }
+    public void printUserLecturs(){
+        int size = lecSize();
+        for (int i = 0; i < size; i++){
+            if(lec[i] instanceof LectureLabsNoLabs){
+                if(lec[i].getLabs().compareTo("YES") == 0)
+                    System.out.print("[" + lec[i].getPrefix() +"/"+lec[i].getTitl()+"]"+"[Lab:"+ lec[i+1].getCRN()+"]");
+                else
+                    System.out.print("[" + lec[i].getPrefix() +"/"+lec[i].getTitl()+"]");
+            }else if(lec[i] instanceof Online){
+                System.out.print("[" + lec[i].getPrefix() +"/"+lec[i].getTitl()+"]"+"[Online]");
+            }
+            
+        }
+    }
     
     public void expandLec(){
         Lecture[] newList = new Lecture[lec.length + 1];
@@ -512,54 +526,71 @@ class UserList extends CheckId{
     
 
         list[spot] = new Faculty(id, name, rank, office, numLec, lectures);
+        expand();
         spot++;
 
         //Gonna fix this by checking lecture list with the user lecture list and grab lecture list items to check the instanceof
         for(int i=0;i< numLec;i++){
             if(lectures[i] instanceof LectureLabsNoLabs){
         	    if(lectures[i].getLabs().compareTo("YES")== 0) {
-	        	
-                    taEntry(lec, lectures[i].getCRN(), list[i].getNumLec());
-	        	
+                    taEntry(lec, lectures[i].getCRN());  
 	            }
             }
         }
-        System.out.println("Enter the TA's ID for ");
     }
 
-    public void taEntry(LectureList lec, String crn, int numLec) {
-    	
-    	System.out.println("Enter the TA's ID for "+crn);
-    	int id=myScan.nextInt();
-    	myScan.nextLine();
-    	for(int i=0;i<numLec;i++) {
-    		if((list[i].getId())==id)
-    		{
-    			int taLecs=list[spot].getNumLec();
-    			System.out.println("TA found as Student "+list[i].getName());
-    			list[spot].setNumLec(taLecs++);
-    			
-    		}
-    		else if((list[i].getId())!=id)
-    		{
-    			int taLecs=0;
-    			System.out.println("Name of TA: ");
-    			String taName=myScan.nextLine();
-    			System.out.println("TA's supervisor's name: ");
-    			String taSupe=myScan.nextLine();
-    			System.out.println("Degree seeking: ");
-    			String taDegree=myScan.nextLine();
-    			//list[spot]=new TA(id, taName, taSupe, taDegree, taLecs++);
-    			spot++;
-    		}
-    		
-    		
-    	}
-    	
-    	
-    }
     
+    public void taEntry(LectureList lec, String crn) {
+        
+    	LabClass[] labsForTA = lec.getLab(crn);
+    	System.out.println(labsForTA.length);
+        
+        LabClass[] lab1;
+        LabClass[] lab2;
+        LabClass[] lab3;
+    
+    	for(int j = 0; j < labsForTA.length; j++){
+            boolean exsist = false;
+            System.out.println("Enter the TA's ID for "+ labsForTA[j].getCRN());
+            int id = idCheck(myScan);
+            for(int k = 0; k < list.length; k++){
+                try{
+                    if(list[k].getId() == id){
+                        exsist = true;
+                    }
+                }catch(Exception e){
+                }
 
+            } 
+            
+                
+            if(exsist){
+                for(int i = 0; i < list.length - 1; i++){
+                    if(list[i].getId() == id){
+                        System.out.println("TA found as Student "+list[i].getName());
+                        //list[i].insertLec(lec);
+
+                    }
+                }
+            }else{
+
+                System.out.println("Name of TA: ");
+                String taName=myScan.nextLine();
+                System.out.println("TA's supervisor's name: ");
+                String taSupe=myScan.nextLine();
+                System.out.println("Degree seeking: ");
+                String taDegree=myScan.nextLine();
+                //problem
+                list[spot] = new TA(id, taName, taSupe, taDegree, 1, labsForTA);
+                spot++;
+                    
+            }
+            expand();
+        }
+    }
+
+    
+    //TODO students can also be TAs and vise versa
     public void studentEntry(LectureList lec){
 
         boolean exsist = false;
@@ -592,6 +623,7 @@ class UserList extends CheckId{
                     System.out.printf("[%s]is added to lab: %s", name, randLab.getCRN());
                     list[spot]= new Student(id, name, 1, lecture);
                     spot++;
+                    expand();
                 } 
             }
         }else{
@@ -608,7 +640,6 @@ class UserList extends CheckId{
                             LabClass randLab = labs[randomNum()]; 
                             System.out.printf("[%s] is added to lab: %s \n ", list[i].getName(), randLab.getCRN());
                             list[i].insertLec(labs);
-                            spot++;
                         } 
                     }
 
@@ -621,11 +652,21 @@ class UserList extends CheckId{
 
     public void studentLectures(){
         int size = list.length;
-        for(int i = 0; i < list.length; i++){
-            
+        System.out.print("Enter the UCF id:");
+        int id = idCheck(myScan);
+        for(int i = 0; i < size; i++){
+            if(list[i].getId() == id){
+                if(list[i] instanceof Student){
+                    System.out.print(list[i].getName()+"\n");
+                    System.out.print("Enrolled in the following lectures \n");
+                    list[i].printUserLecturs();
+                }
+            }else{
+                System.out.print("Sorry No Student Found\n");
+            }
         }
-
     }
+
 
     public void checkLecSize(int id){
         for(int i = 0; i < list.length; i++){
