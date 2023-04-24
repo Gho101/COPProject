@@ -1,7 +1,7 @@
 package COPProject;
 /*
  * Date:4/14/2023
- * Name Steven Luciano-Aguilar
+ * Name Steven Luciano-Aguilar, Dario Antonio, Shayla Hirji
  */
 import java.io.BufferedReader;
 import java.io.File;
@@ -341,7 +341,6 @@ abstract class User{
         setNumLec(numLec);
         setLecList();
         insertLec(parts);
-        
     }
      
 
@@ -350,6 +349,8 @@ abstract class User{
     }
     public void insertLec(Lecture[] parts){
         lec = parts;
+        expandLec();
+
     }
     
     public void expandLec(){
@@ -358,7 +359,7 @@ abstract class User{
         System.arraycopy(lec, 0, newList, 0, lec.length);
             
         lec = newList;
-        lec[lec.length] = null;
+        lec[lec.length - 1] = null;
     }
     
     public int getNumLec() {
@@ -450,7 +451,7 @@ class Faculty extends User{
     
 }
 
-class UserList{
+class UserList extends CheckId{
     private int spot = 0;
     private User[] list;
     private Scanner myScan;
@@ -475,7 +476,7 @@ class UserList{
         System.arraycopy(list, 0, newList, 0, list.length);
         
         list = newList;
-        list[list.length] = null;
+        list[list.length - 1] = null;
     }
 
     public int randomNum(){
@@ -487,7 +488,7 @@ class UserList{
     public void falcultyEntry(LectureList lec){
         
         System.out.print("Enter UCF id:");
-        int id = myScan.nextInt();
+        int id = idCheck(myScan);
         myScan.nextLine();
 
         //id Should be added Here
@@ -516,7 +517,7 @@ class UserList{
         //Gonna fix this by checking lecture list with the user lecture list and grab lecture list items to check the instanceof
         for(int i=0;i< numLec;i++){
             if(lectures[i] instanceof LectureLabsNoLabs){
-        	    if(lectures[i].getLabs().compareTo("Yes")== 0) {
+        	    if(lectures[i].getLabs().compareTo("YES")== 0) {
 	        	
                     taEntry(lec, lectures[i].getCRN(), list[i].getNumLec());
 	        	
@@ -559,42 +560,13 @@ class UserList{
     }
     
 
-
-
-/*
-    public void falcultyEntry(LectureList lec){
-        
-        System.out.print("Enter UCF id:");
-        int id = myScan.nextInt();
-        myScan.nextLine();
-
-        //id Should be added Here
-        System.out.print("Enter name: ");
-        String name = myScan.nextLine();
-
-        System.out.print("Enter rank:");
-        String rank = myScan.nextLine().toLowerCase();
-
-        System.out.print("Enter office location:");
-        String office = myScan.nextLine();
-
-        System.out.print("How many Lectures: ");
-        int numLec = myScan.nextInt();
-        myScan.nextLine();
-
-        System.out.print("Enter the crns of the lectures:");
-        Lecture[] parts = lec.classLookUp(myScan.nextLine(), numLec);
-
-        list[spot] = new Faculty(id, name, rank, office, lec, numLec);
-        list[spot].insertLec(parts);
-        spot++;
-    }*/
-
     public void studentEntry(LectureList lec){
 
         boolean exsist = false;
         System.out.print("Enter UCF id:");
-        int id = myScan.nextInt();
+        
+        int id = idCheck(myScan);
+
         myScan.nextLine();
 
         for(int i = 0; i < list.length; i++){
@@ -619,10 +591,40 @@ class UserList{
                     LabClass randLab = labs[randomNum()]; 
                     System.out.printf("[%s]is added to lab: %s", name, randLab.getCRN());
                     list[spot]= new Student(id, name, 1, lecture);
+                    spot++;
                 } 
             }
+        }else{
+            for(int i = 0; i < list.length; i++){
+                if(list[i].getId() == id){
+                    System.out.printf("Which lecture to enroll [%s] in?", list[i].getName());
+                    String CRN = myScan.nextLine();
+                    Lecture [] lecture = lec.classLookUp(CRN, 1);
+                    list[i].insertLec(lecture);
+
+                    if( lecture[0] instanceof LectureLabsNoLabs){
+                        if(lecture[0].getLabs().compareTo("YES") == 0){
+                            LabClass[] labs = lec.getLab(lecture[0].getCRN());
+                            LabClass randLab = labs[randomNum()]; 
+                            System.out.printf("[%s] is added to lab: %s \n ", list[i].getName(), randLab.getCRN());
+                            list[i].insertLec(labs);
+                            spot++;
+                        } 
+                    }
+
+                }
+             }
+
         }
         
+    }
+
+    public void studentLectures(){
+        int size = list.length;
+        for(int i = 0; i < list.length; i++){
+            
+        }
+
     }
 
     public void checkLecSize(int id){
@@ -680,6 +682,7 @@ public class FinalProject{
                 case 4:
                     break;
                 case 5:
+                    user.studentLectures();
                     break;
                 case 6:
 
@@ -708,14 +711,15 @@ public class FinalProject{
 //_________________________________________________________________________
 class CheckId extends IdException{
     
-    boolean tf = false;
+    
+    public int idCheck(Scanner myScan){
+        boolean tf = false;
 
-    public void idCheck( Scanner scan){
-        while(tf == false){
-            Scanner myScan = scan;
-            String  id = myScan.nextLine();
+       int id;
+        do{
+            id = myScan.nextInt();
             try{
-                if(id.length() == 7){
+                if(String.valueOf(id).length() == 7){
                     tf = true;
                 }else{
                     throw new IdException();
@@ -724,7 +728,8 @@ class CheckId extends IdException{
                 IdException obj = new IdException();
                 System.out.println(obj.getLocalizedMessage());
             }
-        }
+        }while(tf == false);
+        return id;
     }
 }
 //___________________________________________________________________
